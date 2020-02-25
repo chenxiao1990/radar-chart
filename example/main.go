@@ -10,6 +10,7 @@ import (
 func main() {
 
 	op := chart.NewOption()
+	op.Title = "kjkj"
 	// 可以指定字体  这个msyh.ttf是微软雅黑，可以显示中文
 	// op.FontFile = "./msyh.ttf"
 	// 设置文字颜色
