@@ -131,7 +131,7 @@ func DrawRadar(op Options) *image.RGBA {
 	drawtext(rgba, op.FontColor, op.TitleFontSize, f, titlepoint.X, titlepoint.Y, op.Title)
 
 	// 绘制六边形的地方
-	edge := op.Height - titlepoint.Y - 2*op.FontSize
+	edge := op.Height - titlepoint.Y - 2*op.FontSize - 10
 	yoffset := titlepoint.Y + op.FontSize
 	xoffset := op.Width/2 - edge/2
 
@@ -141,6 +141,7 @@ func DrawRadar(op Options) *image.RGBA {
 	}
 
 	fmt.Println("画边线")
+	dingdianpts := make([]image.Point, 0)
 	for j := 0; j < len(op.DataValues); j++ {
 		//找到6个顶点位置 在直径为width的圆上
 		width := edge * op.DataValues[j] / op.DataValues[0]
@@ -156,7 +157,9 @@ func DrawRadar(op Options) *image.RGBA {
 			newx += float64(edge/2 + xoffset)
 			pts = append(pts, image.Point{int(newx), int(newy)})
 		}
-
+		if j == 0 {
+			dingdianpts = pts
+		}
 		for i := 0; i < len(pts); i++ {
 			if i == len(pts)-1 {
 				drawline(rgba, op.BacklineColor, pts[0].X, pts[0].Y, pts[len(pts)-1].X, pts[len(pts)-1].Y, 1)
@@ -164,15 +167,34 @@ func DrawRadar(op Options) *image.RGBA {
 				drawline(rgba, op.BacklineColor, pts[i].X, pts[i].Y, pts[i+1].X, pts[i+1].Y, 1)
 			}
 
-			if j == 0 {
-				drawtext(rgba, op.FontColor, op.FontSize, f, pts[i].X, pts[i].Y, op.DrawDatas[i].Name)
-			}
-
 		}
 		//标尺文字
 		tmpx := pts[len(pts)-1].X/2 + pts[0].X/2
 		tmpy := pts[len(pts)-1].Y/2 + pts[0].Y/2
 		drawtext(rgba, op.FontColor, op.FontSize, f, tmpx, tmpy, fmt.Sprintf("%d", op.DataValues[j]))
+	}
+
+	// 绘制顶点的文字
+	centerx := edge/2 + xoffset
+	centery := edge/2 + yoffset
+	for i, pt := range dingdianpts {
+		tmpy := pt.Y
+		tmpx := pt.X
+		if centerx == tmpx && tmpy > centery {
+			//往下写
+			tmpy += op.FontSize
+		} else if tmpx > centerx {
+			//右侧
+			tmpx += 5
+		} else if tmpx < centerx {
+			//左侧
+			wid := getwidth(op.FontSize, f, op.DrawDatas[i].Name)
+
+			tmpx -= wid + 5
+
+		}
+
+		drawtext(rgba, op.FontColor, op.FontSize, f, tmpx, tmpy, op.DrawDatas[i].Name)
 	}
 
 	// 绘制属性得分线
@@ -256,4 +278,27 @@ func drawtext(rgba *image.RGBA,
 		log.Println(err)
 		return
 	}
+}
+
+func getwidth(fontsize int, f *truetype.Font, text string) int {
+	rgba := image.NewRGBA(image.Rect(0, 0, 1000, 200))
+	c := freetype.NewContext()
+	c.SetDPI(72)
+	c.SetFont(f)
+	c.SetFontSize(float64(fontsize))
+	c.SetClip(rgba.Bounds())
+	c.SetDst(rgba)
+	c.SetSrc(&image.Uniform{color.RGBA{0, 0, 0, 255}})
+
+	c.SetHinting(font.HintingNone)
+
+	pt := freetype.Pt(0, 0)
+	xx, err := c.DrawString(text, pt)
+	if err != nil {
+		log.Println(err)
+		return 0
+	}
+
+	var bb = xx.X >> 6
+	return int(bb)
 }
