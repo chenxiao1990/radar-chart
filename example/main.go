@@ -18,7 +18,9 @@ func main() {
 	// 设置连线颜色
 	// op.BacklineColor = color.RGBA{255, 255, 0, 255}
 
-	op.Title = "kjkj"
+	op.Width = 1024
+	op.Height = 600
+	op.Title = "Title"
 	op.DataValues = []int{100, 80, 60, 40, 20, 0}
 	op.DrawDatas = []chart.DrawData{
 		chart.DrawData{Name: "one", Value: 90},
@@ -34,6 +36,10 @@ func main() {
 	file, _ := os.Create("dst.jpg")
 	jpeg.Encode(file, img, nil)
 	defer file.Close()
+
+	// file, _ := os.Create("dst.png")
+	// png.Encode(file, img)
+	// defer file.Close()
 
 	// 输出到二进制
 	// out := bytes.NewBuffer([]byte{})

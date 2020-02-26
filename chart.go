@@ -10,8 +10,10 @@ import (
 	"math"
 
 	"github.com/golang/freetype"
+	"github.com/golang/freetype/raster"
 	"github.com/golang/freetype/truetype"
 	"golang.org/x/image/font"
+	"golang.org/x/image/math/fixed"
 )
 
 // DefalutFont 默认字体
@@ -21,6 +23,9 @@ func init() {
 	// 加载字体
 	DefalutFont, _ = truetype.Parse(Roboto)
 }
+
+// DPI 。。。
+var DPI float64 = 92
 
 // DrawData 数据
 type DrawData struct {
@@ -103,12 +108,12 @@ func NewOption() Options {
 
 // DrawRadar 绘制
 func DrawRadar(op Options) *image.RGBA {
-	fmt.Println("初始画布", op.Width, op.Height)
+	//fmt.Println("初始画布", op.Width, op.Height)
 
 	imgrect := image.Rect(0, 0, op.Width, op.Height)
 	rgba := image.NewRGBA(imgrect)
 
-	fmt.Println("绘制底色", op.BackgroundColor)
+	//fmt.Println("绘制底色", op.BackgroundColor)
 	draw.Draw(rgba, imgrect, &image.Uniform{op.BackgroundColor}, image.ZP, draw.Src)
 
 	// 加载字体
@@ -126,7 +131,7 @@ func DrawRadar(op Options) *image.RGBA {
 		}
 	}
 
-	fmt.Println("绘制标题", op.Title)
+	//fmt.Println("绘制标题", op.Title)
 	titlepoint := image.Point{0, op.TitleFontSize}
 	drawtext(rgba, op.FontColor, op.TitleFontSize, f, titlepoint.X, titlepoint.Y, op.Title)
 
@@ -140,7 +145,7 @@ func DrawRadar(op Options) *image.RGBA {
 		return nil
 	}
 
-	fmt.Println("画边线")
+	//fmt.Println("画边线")
 	dingdianpts := make([]image.Point, 0)
 	for j := 0; j < len(op.DataValues); j++ {
 		//找到6个顶点位置 在直径为width的圆上
@@ -223,35 +228,51 @@ func DrawRadar(op Options) *image.RGBA {
 
 	return rgba
 }
+
 func drawline(rgba *image.RGBA, linecolor color.RGBA, x0, y0, x1, y1 int, linewidth int) {
 
-	dx := math.Abs(float64(x0 - x1))
-	dy := math.Abs(float64(y0 - y1))
-	sx, sy := 1, 1
-	if x0 >= x1 {
-		sx = -1
-	}
-	if y0 >= y1 {
-		sy = -1
-	}
-	err := dx - dy
+	r := raster.NewRasterizer(rgba.Rect.Dx(), rgba.Rect.Dy())
+	r.UseNonZeroWinding = true
 
-	for {
-		rgba.Set(x0, y0, linecolor)
+	c := raster.RoundCapper
+	j := raster.RoundJoiner
 
-		if x0 == x1 && y0 == y1 {
-			return
-		}
-		e2 := err * 2
-		if e2 > -dy {
-			err -= dy
-			x0 += sx
-		}
-		if e2 < dx {
-			err += dx
-			y0 += sy
-		}
-	}
+	var path raster.Path
+	path.Start(fixed.P(x0, y0))
+	path.Add1(fixed.P(x1, y1))
+	raster.Stroke(r, path, fixed.I(linewidth), c, j)
+
+	p := raster.NewRGBAPainter(rgba)
+	p.SetColor(linecolor)
+	r.Rasterize(p)
+
+	// dx := math.Abs(float64(x0 - x1))
+	// dy := math.Abs(float64(y0 - y1))
+	// sx, sy := 1, 1
+	// if x0 >= x1 {
+	// 	sx = -1
+	// }
+	// if y0 >= y1 {
+	// 	sy = -1
+	// }
+	// err := dx - dy
+
+	// for {
+	// 	rgba.Set(x0, y0, linecolor)
+
+	// 	if x0 == x1 && y0 == y1 {
+	// 		break
+	// 	}
+	// 	e2 := err * 2
+	// 	if e2 > -dy {
+	// 		err -= dy
+	// 		x0 += sx
+	// 	}
+	// 	if e2 < dx {
+	// 		err += dx
+	// 		y0 += sy
+	// 	}
+	// }
 
 }
 
@@ -263,7 +284,7 @@ func drawtext(rgba *image.RGBA,
 	x, y int, text string) {
 
 	c := freetype.NewContext()
-	c.SetDPI(72)
+	c.SetDPI(DPI)
 	c.SetFont(f)
 	c.SetFontSize(float64(fontsize))
 	c.SetClip(rgba.Bounds())
@@ -283,7 +304,7 @@ func drawtext(rgba *image.RGBA,
 func getwidth(fontsize int, f *truetype.Font, text string) int {
 	rgba := image.NewRGBA(image.Rect(0, 0, 1000, 200))
 	c := freetype.NewContext()
-	c.SetDPI(72)
+	c.SetDPI(DPI)
 	c.SetFont(f)
 	c.SetFontSize(float64(fontsize))
 	c.SetClip(rgba.Bounds())
