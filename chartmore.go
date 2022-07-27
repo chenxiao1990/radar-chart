@@ -123,7 +123,7 @@ func DrawMoreRadar(op MoreOptions) *image.RGBA {
 	}
 	//画边界线
 	dingdianpts := make([]image.Point, 0)
-	for j := 0; j < len(op.DataKeys); j++ {
+	for j := 0; j < len(op.DataValues); j++ {
 		//找到6个顶点位置 在直径为width的圆上
 		width := edge * op.DataValues[j] / op.DataValues[0]
 		pts := make([]image.Point, 0)
