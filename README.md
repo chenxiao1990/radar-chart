@@ -2,7 +2,7 @@
 雷达图 六维图  八维图
 
 ![](https://raw.githubusercontent.com/chenxiao1990/radar-chart/master/example/dst.jpg)
-
+![](https://raw.githubusercontent.com/chenxiao1990/radar-chart/master/example/dst1.jpg)
 # 示例
 ```
 package main
