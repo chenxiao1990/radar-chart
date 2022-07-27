@@ -246,33 +246,87 @@ func drawline(rgba *image.RGBA, linecolor color.RGBA, x0, y0, x1, y1 int, linewi
 	p.SetColor(linecolor)
 	r.Rasterize(p)
 
-	// dx := math.Abs(float64(x0 - x1))
-	// dy := math.Abs(float64(y0 - y1))
-	// sx, sy := 1, 1
-	// if x0 >= x1 {
-	// 	sx = -1
-	// }
-	// if y0 >= y1 {
-	// 	sy = -1
-	// }
-	// err := dx - dy
+}
 
-	// for {
-	// 	rgba.Set(x0, y0, linecolor)
+// 多边形蒙版
+type DuobianImage struct {
+	Pts []image.Point
+}
 
-	// 	if x0 == x1 && y0 == y1 {
-	// 		break
-	// 	}
-	// 	e2 := err * 2
-	// 	if e2 > -dy {
-	// 		err -= dy
-	// 		x0 += sx
-	// 	}
-	// 	if e2 < dx {
-	// 		err += dx
-	// 		y0 += sy
-	// 	}
-	// }
+func (s *DuobianImage) At(x, y int) color.Color {
+
+	for i := 0; i < len(s.Pts)-2; i++ {
+		tmp := &SanjiaoImage{P1: s.Pts[0], P2: s.Pts[1+i], P3: s.Pts[2+i]}
+		//蒙版 如果x,y在三角形内返回 alfa 255  否则返回alfa 0
+		_, _, _, a := tmp.At(x, y).RGBA()
+		if a == 0xffff {
+			return color.Alpha{255}
+		}
+	}
+
+	return color.Alpha{}
+}
+
+// 三角面蒙版
+type SanjiaoImage struct {
+	P1 image.Point
+	P2 image.Point
+	P3 image.Point
+}
+
+func (s *SanjiaoImage) At(x, y int) color.Color {
+	//蒙版 如果x,y在三角形内返回 alfa 255  否则返回alfa 0
+	if isInTriangle(Point{s.P1.X, s.P1.Y}, Point{s.P2.X, s.P2.Y}, Point{s.P3.X, s.P3.Y}, Point{x, y}) {
+		return color.Alpha{A: 255}
+	}
+
+	return color.Alpha{}
+}
+
+type Point struct {
+	x int
+	y int
+}
+
+func product(p1 Point, p2 Point, p3 Point) int {
+	//首先根据坐标计算p1p2和p1p3的向量，然后再计算叉乘
+	//p1p2 向量表示为 (p2.x-p1.x,p2.y-p1.y)
+	//p1p3 向量表示为 (p3.x-p1.x,p3.y-p1.y)
+	return (p2.x-p1.x)*(p3.y-p1.y) - (p2.y-p1.y)*(p3.x-p1.x)
+}
+func isInTriangle(p1, p2, p3, o Point) bool {
+	//保证p1，p2，p3是逆时针顺序
+	if product(p1, p2, p3) < 0 {
+		return isInTriangle(p1, p3, p2, o)
+	}
+	if product(p1, p2, o) >= 0 && product(p2, p3, o) >= 0 && product(p3, p1, o) >= 0 {
+		return true
+	}
+	return false
+}
+
+// 绘制三角面
+func drawface(rgba *image.RGBA, linecolor, bgcolor color.RGBA, pts []image.Point, linewidth int) {
+
+	mask := &DuobianImage{Pts: pts}
+
+	for x := 0; x < rgba.Rect.Dx(); x++ {
+		for y := 0; y < rgba.Rect.Dy(); y++ {
+
+			_, _, _, a := mask.At(x, y).RGBA()
+			if a > 0 {
+				// 混合当前颜色和背景色
+				cr, cg, cb, _ := rgba.At(x, y).RGBA()
+				nr, ng, nb, na := bgcolor.RGBA()
+
+				r := uint8(float32(nr)/65535*float32(na)/65535*255 + float32(cr)/65535*float32(65535-na)/65535*255)
+				g := uint8(float32(ng)/65535*float32(na)/65535*255 + float32(cg)/65535*float32(65535-na)/65535*255)
+				b := uint8(float32(nb)/65535*float32(na)/65535*255 + float32(cb)/65535*float32(65535-na)/65535*255)
+
+				rgba.Set(x, y, color.RGBA{r, g, b, 255})
+			}
+		}
+	}
 
 }
 
