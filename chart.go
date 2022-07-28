@@ -250,13 +250,20 @@ func drawline(rgba *image.RGBA, linecolor color.RGBA, x0, y0, x1, y1 int, linewi
 
 // 多边形蒙版
 type DuobianImage struct {
-	Pts []image.Point
+	Pts    []image.Point
+	Center image.Point
 }
 
 func (s *DuobianImage) At(x, y int) color.Color {
 
-	for i := 0; i < len(s.Pts)-2; i++ {
-		tmp := &SanjiaoImage{P1: s.Pts[0], P2: s.Pts[1+i], P3: s.Pts[2+i]}
+	for i := 0; i < len(s.Pts); i++ {
+		var tmp *SanjiaoImage
+		if i == len(s.Pts)-1 {
+			tmp = &SanjiaoImage{P1: s.Center, P2: s.Pts[i], P3: s.Pts[0]}
+		} else {
+			tmp = &SanjiaoImage{P1: s.Center, P2: s.Pts[i], P3: s.Pts[1+i]}
+		}
+
 		//蒙版 如果x,y在三角形内返回 alfa 255  否则返回alfa 0
 		_, _, _, a := tmp.At(x, y).RGBA()
 		if a == 0xffff {
@@ -294,21 +301,31 @@ func product(p1 Point, p2 Point, p3 Point) int {
 	//p1p3 向量表示为 (p3.x-p1.x,p3.y-p1.y)
 	return (p2.x-p1.x)*(p3.y-p1.y) - (p2.y-p1.y)*(p3.x-p1.x)
 }
+func isonline(p1 Point, p2 Point, p3 Point) bool {
+	tmp := (p2.x-p1.x)*(p3.y-p1.y) - (p2.y-p1.y)*(p3.x-p1.x)
+	if tmp == 0 && ((p3.x >= p1.x && p3.x <= p2.x) || (p3.x <= p1.x && p3.x >= p2.x)) && ((p3.y >= p1.y && p3.y <= p2.y) || (p3.y <= p1.y && p3.y >= p2.y)) {
+		return true
+	}
+	return false
+}
 func isInTriangle(p1, p2, p3, o Point) bool {
 	//保证p1，p2，p3是逆时针顺序
 	if product(p1, p2, p3) < 0 {
 		return isInTriangle(p1, p3, p2, o)
 	}
-	if product(p1, p2, o) >= 0 && product(p2, p3, o) >= 0 && product(p3, p1, o) >= 0 {
+	if product(p1, p2, o) > 0 && product(p2, p3, o) > 0 && product(p3, p1, o) > 0 {
+		return true
+	}
+	if isonline(p1, p2, o) || isonline(p2, p3, o) || isonline(p3, p1, o) {
 		return true
 	}
 	return false
 }
 
 // 绘制三角面
-func drawface(rgba *image.RGBA, linecolor, bgcolor color.RGBA, pts []image.Point, linewidth int) {
+func drawface(rgba *image.RGBA, linecolor, bgcolor color.RGBA, center image.Point, pts []image.Point, linewidth int) {
 
-	mask := &DuobianImage{Pts: pts}
+	mask := &DuobianImage{Pts: pts, Center: center}
 
 	for x := 0; x < rgba.Rect.Dx(); x++ {
 		for y := 0; y < rgba.Rect.Dy(); y++ {

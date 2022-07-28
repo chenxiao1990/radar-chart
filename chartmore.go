@@ -182,7 +182,7 @@ func DrawMoreRadar(op MoreOptions) *image.RGBA {
 	for _, datas := range op.DrawDatas {
 		angel := float64(0)
 		pts := make([]image.Point, 0)
-		for i := 0; i < len(op.DataKeys); i++ {
+		for i := 0; i < len(datas.Values); i++ {
 			tmpedge := edge * datas.Values[i] / op.DataValues[0]
 			angel = float64(i) * float64(math.Pi) * 2 / float64(len(datas.Values))
 			newx := math.Sin(angel) * float64(tmpedge/2)
@@ -196,7 +196,7 @@ func DrawMoreRadar(op MoreOptions) *image.RGBA {
 
 		if datas.FaceColor.A > 0 {
 			// 绘制面
-			drawface(rgba, datas.LinklineColor, datas.FaceColor, pts, 3)
+			drawface(rgba, datas.LinklineColor, datas.FaceColor, image.Point{centerx, centery}, pts, 3)
 		}
 
 		// 画属性连接线

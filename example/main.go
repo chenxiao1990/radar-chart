@@ -68,9 +68,10 @@ func more() {
 	op.DataValues = []int{100, 80, 60, 40, 20, 0}
 	op.DataKeys = []string{"身高", "体重", "BMI", "肺活量", "长跑", "无语", "解决"}
 	op.DrawDatas = []chart.DrawMoreData{
-		// {Name: "我的成绩", LinklineColor: color.RGBA{34, 139, 34, 255}, Values: []int{98, 85, 92, 30, 76, 60}},
-		// {Name: "班级平均值", FaceColor: color.RGBA{12, 14, 255, 100}, LinklineColor: color.RGBA{12, 14, 255, 255}, Values: []int{80, 66, 77, 64, 90, 100}},
-		{Name: "年级平均值", FaceColor: color.RGBA{4 * 16, 9*16 + 14, 255, 100}, LinklineColor: color.RGBA{4 * 16, 9*16 + 14, 255, 255}, Values: []int{18, 78, 92, 40, 76, 57, 66}},
+
+		{Name: "班级平均值", FaceColor: color.RGBA{12, 14, 255, 100}, LinklineColor: color.RGBA{12, 14, 255, 255}, Values: []int{80, 66, 77, 44, 76, 100, 88}},
+		{Name: "年级平均值", FaceColor: color.RGBA{4 * 16, 9*16 + 14, 255, 100}, LinklineColor: color.RGBA{4 * 16, 9*16 + 14, 255, 255}, Values: []int{58, 0, 92, 70, 76, 57, 66}},
+		{Name: "我的成绩", LinklineColor: color.RGBA{34, 139, 34, 255}, Values: []int{98, 85, 92, 80, 80, 60, 55}},
 	}
 	img := chart.DrawMoreRadar(op)
 
