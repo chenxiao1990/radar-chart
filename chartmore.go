@@ -71,20 +71,14 @@ func NewMoreOption() MoreOptions {
 		// FontSize 文字大小
 		FontSize: 12,
 
-		// FontFile 字体文件
-		// 例如微软雅黑: D:/haha/msyh.ttf
-		FontFile: "./msyh.ttf",
 		// DataValue 属性边线 从外到内圈
-		DataValues: []int{100, 80, 60, 40, 20, 0},
+		DataValues: []int{},
 		//各顶点的类型
-		DataKeys: []string{"one", "two", "three", "four", "five", "six"},
+		DataKeys: []string{},
 		// Title 标题文字
 		Title: "",
 		// DrawDatas 属性
-		DrawDatas: []DrawMoreData{
-			{Name: "第一条线", LinklineColor: color.RGBA{12, 14, 255, 255}, Values: []int{1, 50, 60, 70, 80, 10}},
-			{Name: "第二条线", LinklineColor: color.RGBA{4 * 16, 9*16 + 14, 255, 255}, Values: []int{80, 50, 50, 88, 100, 30}},
-		},
+		DrawDatas: []DrawMoreData{},
 	}
 }
 

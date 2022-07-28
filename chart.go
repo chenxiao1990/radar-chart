@@ -21,7 +21,7 @@ var DefalutFont *truetype.Font
 
 func init() {
 	// 加载字体
-	DefalutFont, _ = truetype.Parse(Roboto)
+	DefalutFont, _ = truetype.Parse(Msyh)
 }
 
 // DPI 。。。
